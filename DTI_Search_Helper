@@ -47,6 +47,11 @@
             img: "http://images.neopets.com/items/ffu_illusen_armoire.gif",
             title: "Closet",
         },
+        idb: {
+           url: "https://itemdb.com.br/item/%s",
+           img: "https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg"
+           title: "Item DB",
+     }
     };
 
     // Discord share configuration for neobot
