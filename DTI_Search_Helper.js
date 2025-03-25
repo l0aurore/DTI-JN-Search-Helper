@@ -11,7 +11,7 @@
 // @connect      items.jellyneo.net
 // @connect      images.neopets.com
 // @run-at       document-idle
-// @downloadURL  https://github.com/l0aurore/DTI-JN-Search-Helper/raw/refs/heads/main/DTI_Search_Helper
+// @downloadURL  https://github.com/l0aurore/DTI-JN-Search-Helper/raw/refs/heads/main/DTI_Search_Helper.js
 // ==/UserScript==
 
 (function () {
