@@ -230,7 +230,7 @@
             searchResultItems.forEach(processItemElement);
         }
 
-        // Additional selectors for the specific layout shown in the screenshot
+     
         const listItems = parentNode.querySelectorAll("li, tr, .item");
         if (listItems.length > 0) {
             listItems.forEach((item) => {
@@ -296,7 +296,7 @@
             }
         }
 
-        // Strategy 3: For the layout shown in the screenshot (item list with NP markers)
+       
         if (!itemName) {
             // Find elements with "NP" text nearby
             const npElement = itemElement.querySelector(
