@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dress to Impress - Jellyneo Price Display
 // @namespace    neopets, jellyneo, dress to impress. 
-// @version      1.5
+// @version      1.5.1
 // @description  Enhances Dress to Impress by displaying Jellyneo price data for Neopets items with search links (using Dicerollers Search Helper foundation), clipboards neobot compatible. 
 // @author       Laurore
 // @match        https://impress.openneo.net/*
@@ -50,7 +50,7 @@
         },
         idb: {
            url: "https://itemdb.com.br/item/%s",
-           img: "https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg"
+           img: "https://images.neopets.com/themes/h5/basic/images/v3/quickstock-icon.svg",
            title: "Item DB",
      }
     };
