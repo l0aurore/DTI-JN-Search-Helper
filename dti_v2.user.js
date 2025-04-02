@@ -12,8 +12,8 @@
 // @connect      images.neopets.com
 // @connect      itemdb.com.br
 // @run-at       document-idle
-// @downloadURL  https://github.com/l0aurore/DTI-JN-Search-Helper/raw/refs/heads/main/dti_vs2.user.js
-// @updateURL    https://github.com/l0aurore/DTI-JN-Search-Helper/raw/refs/heads/main/dti_vs.user.js
+// @downloadURL  https://github.com/l0aurore/DTI-JN-Search-Helper/raw/refs/heads/main/DTI_Search_Helper.user.js
+// @updateURL    https://github.com/l0aurore/DTI-JN-Search-Helper/raw/refs/heads/main/DTI_Search_Helper.user.js
 // ==/UserScript==
 
 (function () {
@@ -361,7 +361,7 @@
             const possibleTextNodes = Array.from(itemElement.childNodes).filter(
                 (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim(),
             );
-
+            
             if (possibleTextNodes.length > 0) {
                 const text = possibleTextNodes[0].textContent.trim();
                 if (text.length > 3 && !text.includes("NP") && !text.includes("NC")) {
@@ -439,16 +439,16 @@
                 if (price) {
                     // Update the price container with the actual price
                     priceContainer.textContent = formatNumber(price) + " NP";
-
+                    
                     // Apply price style
                     Object.assign(priceContainer.style, priceStyle);
-
+                    
                 } else {
                     // Item not found or no price available
                     priceContainer.textContent = "No price data";
                     Object.assign(priceContainer.style, errorStyle);
                 }
-
+                
                 // Always add item search links, even if no price is found
                 addItemSearchLinks(itemElement, nameElement, itemName);
             })
@@ -456,7 +456,7 @@
                 debugLog("Error fetching price:", error);
                 priceContainer.textContent = "Error";
                 Object.assign(priceContainer.style, errorStyle);
-
+                
                 // Add search links even on error
                 addItemSearchLinks(itemElement, nameElement, itemName);
             });
@@ -471,7 +471,7 @@
         // Create cache key for owl values
         const cacheKey = "owl_value_" + itemName;
         const cachedData = GM_getValue(cacheKey);
-
+        
         if (cachedData) {
             const { timestamp, data } = cachedData;
             const now = Date.now();
@@ -484,12 +484,12 @@
                 debugLog("Owl value cache expired for", itemName);
             }
         }
-
+        
         // Per ItemDB docs, use the official search endpoint
         const searchUrl = "https://itemdb.com.br/api/v1/search?q=" + encodeURIComponent(itemName);
-
+        
         debugLog("Searching for item:", itemName, "using ItemDB API");
-
+        
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
                 method: "GET",
@@ -503,32 +503,32 @@
                         try {
                             const results = JSON.parse(response.responseText);
                             debugLog("ItemDB search response:", results);
-
+                            
                             if (!results || !results.items || results.items.length === 0) {
                                 debugLog("No items found in ItemDB search");
                                 resolve(null);
                                 return;
                             }
-
+                            
                             // Find an exact match if possible (case insensitive), or use the first result
                             let bestItem = results.items[0];
                             let bestMatchScore = 0;
-
+                            
                             for (const item of results.items) {
                                 // Skip non-NC items
                                 if (item.type !== "nc") continue;
-
+                                
                                 // Perfect match
                                 if (item.name.toLowerCase() === itemName.toLowerCase()) {
                                     bestItem = item;
                                     debugLog("Found exact match for NC item:", item.name);
                                     break;
                                 }
-
+                                
                                 // Calculate a similarity score
                                 const nameLower = item.name.toLowerCase();
                                 const searchLower = itemName.toLowerCase();
-
+                                
                                 // Simple score based on whether the name contains all the words in the search
                                 const searchWords = searchLower.split(/\s+/);
                                 let wordCount = 0;
@@ -537,27 +537,27 @@
                                         wordCount++;
                                     }
                                 }
-
+                                
                                 const score = wordCount / searchWords.length;
                                 if (score > bestMatchScore) {
                                     bestMatchScore = score;
                                     bestItem = item;
                                 }
                             }
-
+                            
                             // If the item isn't NC type, we don't need owl value
                             if (bestItem.type !== "nc") {
                                 debugLog("Best match item is not NC type:", bestItem.name, bestItem.type);
                                 resolve(null);
                                 return;
                             }
-
+                            
                             debugLog("Best match NC item:", bestItem.name, "with ID:", bestItem.id);
-
+                            
                             // Get the item details to find the owl value
                             if (bestItem.id) {
                                 const itemUrl = "https://itemdb.com.br/api/v1/items/" + bestItem.id;
-
+                                
                                 GM_xmlhttpRequest({
                                     method: "GET",
                                     url: itemUrl,
@@ -570,15 +570,15 @@
                                             try {
                                                 const itemDetails = JSON.parse(detailResponse.responseText);
                                                 debugLog("Item details response:", itemDetails);
-
+                                                
                                                 // Check for owl value in various possible locations
                                                 let owlValue = null;
                                                 let owlRange = null; // Store range information if present
-
+                                                
                                                 // Helper function to extract range from string
                                                 const extractRange = (str) => {
                                                     if (typeof str !== 'string') return null;
-
+                                                    
                                                     // Check for range format (e.g., "4-5", "~4-5", "4~5")
                                                     const rangeMatch = str.match(/(\d+(?:\.\d+)?)\s*[-~]\s*(\d+(?:\.\d+)?)/);
                                                     if (rangeMatch) {
@@ -587,7 +587,7 @@
                                                             max: parseFloat(rangeMatch[2])
                                                         };
                                                     }
-
+                                                    
                                                     // Check for single value with modifier (e.g., "~4", "≈4")
                                                     const approxMatch = str.match(/[~≈]\s*(\d+(?:\.\d+)?)/);
                                                     if (approxMatch) {
@@ -597,7 +597,7 @@
                                                             max: value
                                                         };
                                                     }
-
+                                                    
                                                     // Check for plain number in string
                                                     const numMatch = str.match(/(\d+(?:\.\d+)?)/);
                                                     if (numMatch && !isNaN(parseFloat(numMatch[1]))) {
@@ -607,10 +607,10 @@
                                                             max: value
                                                         };
                                                     }
-
+                                                    
                                                     return null;
                                                 };
-
+                                                
                                                 // First check the dedicated value property
                                                 if (itemDetails.value) {
                                                     if (typeof itemDetails.value.owls === 'number') {
@@ -631,7 +631,7 @@
                                                         }
                                                     }
                                                 }
-
+                                                
                                                 // Check in estimated prices object
                                                 if (owlValue === null && itemDetails.estimatedPrices) {
                                                     if (typeof itemDetails.estimatedPrices.owls === 'number') {
@@ -643,7 +643,7 @@
                                                         }
                                                     }
                                                 }
-
+                                                
                                                 // Check in prices object as a fallback
                                                 if (owlValue === null && itemDetails.prices) {
                                                     if (typeof itemDetails.prices.owls === 'number') {
@@ -670,10 +670,10 @@
                                                     // Search through all properties recursively to find any owl value
                                                     const searchForOwls = (obj, path = '') => {
                                                         if (!obj || typeof obj !== 'object') return;
-
+                                                        
                                                         Object.keys(obj).forEach(key => {
                                                             const fullPath = path ? `${path}.${key}` : key;
-
+                                                            
                                                             if (key.toLowerCase().includes('owl') && owlValue === null) {
                                                                 if (typeof obj[key] === 'number') {
                                                                     owlValue = obj[key];
@@ -686,16 +686,16 @@
                                                                     }
                                                                 }
                                                             }
-
+                                                            
                                                             if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
                                                                 searchForOwls(obj[key], fullPath);
                                                             }
                                                         });
                                                     };
-
+                                                    
                                                     searchForOwls(itemDetails);
                                                 }
-
+                                                
                                                 // Log results for debugging
                                                 if (owlValue !== null) {
                                                     if (typeof owlValue === 'object' && owlValue.min !== undefined) {
@@ -707,13 +707,13 @@
                                                     debugLog("No owl value found for item:", bestItem.name);
                                                     debugLog("Item details:", JSON.stringify(itemDetails, null, 2));
                                                 }
-
+                                                
                                                 // Cache the result
                                                 GM_setValue(cacheKey, {
                                                     timestamp: Date.now(),
                                                     data: owlValue
                                                 });
-
+                                                
                                                 resolve(owlValue);
                                             } catch (error) {
                                                 debugLog("Error parsing item details:", error);
@@ -774,7 +774,7 @@
 
         // Append the NC indicator
         nameElement.appendChild(ncIndicator);
-
+        
         // Try to fetch the owl value from ItemDB
         fetchItemDBOwlValue(itemName)
             .then(owlValue => {
@@ -782,7 +782,7 @@
                     // Create an owl value indicator
                     const owlIndicator = document.createElement("span");
                     owlIndicator.className = "jellyneo-price owl-indicator";
-
+                    
                     // Format the owl value text based on whether it's a range or single value
                     if (typeof owlValue === 'object' && owlValue.min !== undefined) {
                         // It's a range
@@ -797,7 +797,7 @@
                         // It's a single numeric value
                         owlIndicator.textContent = owlValue + (owlValue === 1 ? " owl" : " owls");
                     }
-
+                    
                     owlIndicator.style.color = "#FF9900"; // Orange for owl values
                     owlIndicator.style.fontWeight = "bold";
                     owlIndicator.style.fontSize = "0.9em";
@@ -806,7 +806,7 @@
                     owlIndicator.style.background = "rgba(255, 153, 0, 0.1)";
                     owlIndicator.style.display = "inline-block";
                     owlIndicator.style.margin = "0 5px";
-
+                    
                     // Append the owl indicator after the NC indicator
                     ncIndicator.insertAdjacentElement('afterend', owlIndicator);
                 } else {
@@ -947,7 +947,7 @@
         // Add click event to copy text to clipboard
         link.addEventListener("click", function (e) {
             e.preventDefault();
-
+            
             // Use try/catch to handle browsers where clipboard API is unavailable
             try {
                 navigator.clipboard.writeText(text).then(
@@ -955,11 +955,11 @@
                         // Success feedback
                         const originalTitle = link.title;
                         link.title = "Copied!";
-
+                        
                         // Flash background color for visual feedback
                         const originalBackgroundColor = icon.style.backgroundColor;
                         icon.style.backgroundColor = "#4B9E65"; // Green for success
-
+                        
                         setTimeout(() => {
                             link.title = originalTitle;
                             icon.style.backgroundColor = originalBackgroundColor;
@@ -967,7 +967,7 @@
                     },
                     function (err) {
                         console.error("Could not copy text: ", err);
-
+                        
                         // Error feedback
                         link.title = "Copy failed!";
                         setTimeout(() => {
@@ -1047,8 +1047,8 @@
 
         // Create search URL for Jellyneo item database with more specific parameters
         // Use the exact name matching to get more accurate results
-        const searchUrl = "https://items.jellyneo.net/search/" +
-                         "?name=" + encodeURIComponent(itemName) +
+        const searchUrl = "https://items.jellyneo.net/search/" + 
+                         "?name=" + encodeURIComponent(itemName) + 
                          "&name_type=3"; // Type 3 is exact match
 
         debugLog("Fetching price for", itemName, "from", searchUrl);
@@ -1064,11 +1064,11 @@
                             // Check if the response indicates no results
                             if (response.responseText.includes("No items found.")) {
                                 debugLog("Jellyneo says: No items found. Trying fuzzy match...");
-
+                                
                                 // Try again with a fuzzy match
-                                const fuzzySearchUrl = "https://items.jellyneo.net/search/" +
+                                const fuzzySearchUrl = "https://items.jellyneo.net/search/" + 
                                                      "?name=" + encodeURIComponent(itemName);
-
+                                
                                 GM_xmlhttpRequest({
                                     method: "GET",
                                     url: fuzzySearchUrl,
@@ -1099,7 +1099,7 @@
                                 });
                                 return;
                             }
-
+                            
                             const price = extractPriceFromJellyneoResponse(response.responseText, itemName);
                             setCachedData(itemName, price);
                             resolve(price);
@@ -1133,25 +1133,25 @@
      */
     function extractPriceFromJellyneoResponse(responseHtml, itemName) {
         debugLog("Extracting price from Jellyneo response for", itemName);
-
+        
         // Create a temporary element to parse the HTML
         const tempElement = document.createElement("div");
         tempElement.innerHTML = responseHtml;
-
+        
         // Log the HTML structure for debugging
         debugLog("HTML response length:", responseHtml.length);
-
+        
         // First approach: Check if we're on an item page with pricing info
         const itemHeader = tempElement.querySelector("h1.itemheader");
         const priceBox = tempElement.querySelector("div.item-pricing-box");
-
+        
         if (itemHeader && priceBox) {
             debugLog("Found direct item page with item header and price box");
-
+            
             // Get price from the price box
             const priceText = priceBox.textContent.trim();
             debugLog("Price text from direct item page:", priceText);
-
+            
             // Extract the numeric value using regex - look for digits with optional commas
             const match = priceText.match(/(\d{1,3}(?:,\d{3})*|\d+)/);
             if (match) {
@@ -1161,52 +1161,52 @@
                 return price;
             }
         }
-
+        
         // Alternative approach for item page: Look for specific pricing elements
         const pricingSection = tempElement.querySelector(".item-details-pricing");
         if (pricingSection) {
             debugLog("Found item-details-pricing section");
-
+            
             // Try to find the current price (should be the first one)
             const priceText = pricingSection.textContent.trim();
             debugLog("Complete price section text:", priceText);
-
+            
             // Pattern: Look for "Current Price: X NP" or just a number followed by NP
-            const currentMatch = priceText.match(/Current Price: (\d{1,3}(?:,\d{3})*|\d+) NP/i) ||
+            const currentMatch = priceText.match(/Current Price: (\d{1,3}(?:,\d{3})*|\d+) NP/i) || 
                                priceText.match(/(\d{1,3}(?:,\d{3})*|\d+) NP/i);
-
+            
             if (currentMatch) {
                 const price = parseInt(currentMatch[1].replace(/,/g, ""), 10);
                 debugLog("Extracted current price:", price);
                 return price;
             }
         }
-
+        
         // Second approach: Look for item in search results table
         const searchTables = tempElement.querySelectorAll("table.item-search-results");
         debugLog("Found search tables:", searchTables.length);
-
+        
         if (searchTables.length > 0) {
             for (const table of searchTables) {
                 const rows = table.querySelectorAll("tr");
                 debugLog("Found rows in search table:", rows.length);
-
+                
                 for (const row of rows) {
                     // Check if this row contains our item
                     const nameCell = row.querySelector("td.name a");
                     if (!nameCell) continue;
-
+                    
                     const rowItemName = nameCell.textContent.trim();
                     debugLog("Found item in search results:", rowItemName);
-
+                    
                     // Use a more flexible matching approach
                     // 1. Direct case-insensitive match
                     // 2. Match without apostrophes and other special characters
                     // 3. Match if one is a substring of the other (for cases where names slightly differ)
                     const normalizedRowName = rowItemName.toLowerCase().replace(/['\-\s]/g, '');
                     const normalizedItemName = itemName.toLowerCase().replace(/['\-\s]/g, '');
-
-                    if (rowItemName.toLowerCase() === itemName.toLowerCase() ||
+                    
+                    if (rowItemName.toLowerCase() === itemName.toLowerCase() || 
                         normalizedRowName === normalizedItemName ||
                         normalizedRowName.includes(normalizedItemName) ||
                         normalizedItemName.includes(normalizedRowName)) {
@@ -1215,7 +1215,7 @@
                         if (priceCell) {
                             const priceText = priceCell.textContent.trim();
                             debugLog("Price text from search result:", priceText);
-
+                            
                             // Extract the numeric value using regex
                             const match = priceText.match(/(\d{1,3}(?:,\d{3})*|\d+)/);
                             if (match) {
@@ -1229,11 +1229,11 @@
                 }
             }
         }
-
+        
         // Last resort: Try to find any price-like text in the document
         const bodyText = tempElement.textContent;
         const priceMatches = bodyText.match(/(\d{1,3}(?:,\d{3})*|\d+) NP/g);
-
+        
         if (priceMatches && priceMatches.length > 0) {
             debugLog("Found price-like patterns in document:", priceMatches);
             // Take the first price mentioned
@@ -1242,7 +1242,7 @@
             debugLog("Using first found price:", price);
             return price;
         }
-
+        
         // No price found
         debugLog("No price found for", itemName);
         return null;
